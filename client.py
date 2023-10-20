@@ -21,10 +21,11 @@ def start_receiver():
         frame_data = np.frombuffer(message, dtype=np.uint8)
         reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
         print(reconstructed_frame)
+        time.sleep(1)
 
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()
-time.sleep(2)
+time.sleep(3)
 
 while True:
     cv.imshow('Received Frame', reconstructed_frame)

@@ -5,8 +5,8 @@ import cv2 as cv
 HOST = '192.168.0.2'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 200
-FRAME_HEIGHT = 200
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
 
 def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -9,20 +9,15 @@ FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 
 def start_server():
-    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
+    server.listen(5)
 
     while True:
-        try:
-            message_address = server.recvfrom(BUFFER_SIZE)
-            message = message_address[0]
-            address = message_address[1]
-            
-            print(frame)
-            server.sendto(frame_bytes, address)
-        except KeyboardInterrupt:
-            break
-
+        client_socket, _ = server.accept()
+        client_socket.sendall(frame_bytes)
+        client_socket.close()
+        
 server_thread = threading.Thread(target=start_server)
 server_thread.start()
 

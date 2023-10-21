@@ -5,20 +5,19 @@ import time
 
 HOST = '192.168.0.2'
 PORT = 19122
-BUFFER_SIZE = 204800
+BUFFER_SIZE = 1048576
 
 CONNECTIONS = dict()
 
-def start_server():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((HOST, PORT))
-    server.listen(5)
-    print("Server Online!")
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+server.bind((HOST, PORT))
+server.listen(5)
+print("Server Online!")
 
+def handle_connect(client_socket, client_address):
     while True:
-        client_socket, client_address = server.accept()
         ip_address = client_address[0]
-        print("accept connection:",ip_address)
         
         if ip_address not in CONNECTIONS.keys():
             CONNECTIONS[ip_address] = b''
@@ -35,6 +34,11 @@ def start_server():
             data = pickle.dumps(CONNECTIONS)
             client_socket.sendall(data+b'END')
             CONNECTIONS[ip_address] = received_data
+            time.sleep(0.1)
 
-server_thread = threading.Thread(target=start_server)
-server_thread.start()
+while True:
+    client_socket, client_address = server.accept()
+    print("accept connection:", client_address[0])
+    client_thread = threading.Thread(target=handle_connect,
+                                     args=(client_socket, client_address))
+    client_thread.start()

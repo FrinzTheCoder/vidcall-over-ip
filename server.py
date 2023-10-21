@@ -17,6 +17,7 @@ def start_server():
         client_socket, _ = server.accept()
         client_socket.sendall(frame_bytes)
         client_socket.close()
+        # print(frame)
         
 server_thread = threading.Thread(target=start_server)
 server_thread.start()

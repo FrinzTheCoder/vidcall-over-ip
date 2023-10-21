@@ -8,8 +8,8 @@ import pickle
 HOST = '192.168.0.2'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
+FRAME_WIDTH = 200
+FRAME_HEIGHT = 112
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -42,26 +42,33 @@ while frame_bytes == b'':
 
 def start_receiver():
     while True:
-        global CONNECTIONS
-        user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        user_socket.connect((HOST,PORT))
+        try:
+            global CONNECTIONS
+            user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            user_socket.bind(('192.168.0.10',19122))
+            user_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            user_socket.connect((HOST,PORT))
 
-        # sending_thread = threading.Thread(target=send_thread,
-        #                                   args=(user_socket, frame_bytes))
-        # sending_thread.start()
-        user_socket.send(frame_bytes)
-        print("sending data")
+            # sending_thread = threading.Thread(target=send_thread,
+            #                                   args=(user_socket, frame_bytes))
+            # sending_thread.start()
+            user_socket.send(frame_bytes)
+            print("sending data")
 
-        received_data = b''
-        while True:
-            data_chunk = user_socket.recv(BUFFER_SIZE)
-            if not data_chunk:
-                break
-            received_data += data_chunk
-        print("received data")
-        user_socket.close()
-        CONNECTIONS = pickle.loads(received_data)
-        time.sleep(0.3)
+            received_data = b''
+            while True:
+                data_chunk = user_socket.recv(BUFFER_SIZE)
+                if not data_chunk:
+                    break
+                received_data += data_chunk
+            print("received data")
+            user_socket.close()
+            CONNECTIONS = pickle.loads(received_data)
+            time.sleep(0.3)
+        except:
+            print("TIMEOUT!")
+            time.sleep(2)
+            print("STARTING AGAIN")
 
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()

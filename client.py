@@ -7,9 +7,9 @@ import pickle
 
 HOST = '192.168.0.2'
 PORT = 19122
-BUFFER_SIZE = 204800
-FRAME_WIDTH = 1920
-FRAME_HEIGHT = 1080
+BUFFER_SIZE = 1048576
+FRAME_WIDTH = 1000
+FRAME_HEIGHT = 563
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -37,25 +37,25 @@ camera_thread.start()
 while frame_bytes == b'':
     pass
 
-def start_receiver():
-    while True:        
-        global CONNECTIONS
-        user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        user_socket.bind(('192.168.0.2', 19123))
-        user_socket.connect((HOST,PORT))
-        
-        while True:
-            user_socket.sendall(frame_bytes+b'END')
+def start_receiver():  
+    global CONNECTIONS
+    user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    user_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    # user_socket.bind(('192.168.0.10', 19122))
+    user_socket.connect((HOST,PORT))
+    
+    while True:
+        user_socket.sendall(frame_bytes+b'END')
 
-            received_data = b''
-            while True:
-                data_chunk = user_socket.recv(BUFFER_SIZE)
-                received_data += data_chunk
-                if b'END' in received_data:
-                    received_data = received_data[:len(received_data)-3]
-                    break
-                
-            CONNECTIONS = pickle.loads(received_data)
+        received_data = b''
+        while True:
+            data_chunk = user_socket.recv(BUFFER_SIZE)
+            received_data += data_chunk
+            if b'END' in received_data:
+                received_data = received_data[:len(received_data)-3]
+                break
+
+        CONNECTIONS = pickle.loads(received_data)
         
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()

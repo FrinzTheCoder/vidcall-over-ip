@@ -5,11 +5,11 @@ import numpy as np
 import threading
 import pickle
 
-HOST = '192.168.0.2'
+HOST = '34.101.251.225'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 1000
-FRAME_HEIGHT = 563
+FRAME_WIDTH = 800
+FRAME_HEIGHT = 600
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -54,19 +54,26 @@ def start_receiver():
             if b'END' in received_data:
                 received_data = received_data[:len(received_data)-3]
                 break
-
-        CONNECTIONS = pickle.loads(received_data)
+        try:
+            CONNECTIONS = pickle.loads(received_data)
+        except:
+            CONNECTIONS = dict()
+            print("ERROR PICKLE TRUNCATED2")
+        time.sleep(0.2)
         
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()
 
 while True:
-    for host in CONNECTIONS.keys():
-        frame_data = np.frombuffer(CONNECTIONS[host], dtype=np.uint8)
-        try:
-            reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
-            cv.imshow(str(host),reconstructed_frame)
-            if cv.waitKey(1) == ord('q'):
-                break
-        except:
-            time.sleep(1)
+    try:
+        for host in CONNECTIONS.keys():
+            frame_data = np.frombuffer(CONNECTIONS[host], dtype=np.uint8)
+            try:
+                reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
+                cv.imshow(str(host),reconstructed_frame)
+                if cv.waitKey(1) == ord('q'):
+                    break
+            except:
+                time.sleep(1)
+    except:
+        print("ERROR")

@@ -5,11 +5,11 @@ import numpy as np
 import threading
 import pickle
 
-HOST = '192.168.0.2'
-PORT = 19122
+HOST = '34.101.251.225'
+PORT = 25565
 BUFFER_SIZE = 52428800
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
+FRAME_WIDTH = 160
+FRAME_HEIGHT = 90
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -51,7 +51,7 @@ def start_receiver():
 
         user_socket.close()
         CONNECTIONS = pickle.loads(received_data)
-        # time.sleep(0.2)
+        time.sleep(0.2)
 
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()

@@ -16,11 +16,17 @@ CONNECTIONS = dict()
 def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
-    server.listen(3)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, 5000)  # 5-second receive timeout
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, 5000)  # 5-second send timeout
+    server.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    server.listen(5)
     print("Server Online!")
 
     while True:
         client_socket, client_address = server.accept()
+        print(str(client_address))
         client_address = client_address[0]
         print("accepting connection from: ", str(client_address))
 

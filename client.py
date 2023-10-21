@@ -7,11 +7,10 @@ import pickle
 
 HOST = '192.168.0.2'
 PORT = 19122
-BUFFER_SIZE = 20480
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
+BUFFER_SIZE = 204800
+FRAME_WIDTH = 1920
+FRAME_HEIGHT = 1080
 CONNECTIONS = dict()
-BUFFER = b''
 
 frame_bytes = b''
 def start_camera():
@@ -41,32 +40,22 @@ while frame_bytes == b'':
 def start_receiver():
     while True:        
         global CONNECTIONS
-        global BUFFER
-        user_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        user_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         user_socket.bind(('192.168.0.2', 19123))
+        user_socket.connect((HOST,PORT))
         
-        chunks = [frame_bytes[i:i+BUFFER_SIZE] for i in range(0, len(frame_bytes), BUFFER_SIZE)]
-        for chunk in chunks:
-            print(len(chunk))
-            user_socket.sendto(chunk, (HOST, PORT))
-        user_socket.sendto(b'END', (HOST, PORT))
-        print("sent data")
-
         while True:
-            message_address = user_socket.recvfrom(BUFFER_SIZE)
-            received_data = message_address[0]
-            print(received_data[-1])
-        
-            if received_data == b'END' or received_data == b'':
-                CONNECTIONS = pickle.loads(BUFFER)
-                BUFFER = b''
-                print("END OF FILE")
-                break
-            else:
-                BUFFER += received_data
-        user_socket.close()
-        # time.sleep()
+            user_socket.sendall(frame_bytes+b'END')
+
+            received_data = b''
+            while True:
+                data_chunk = user_socket.recv(BUFFER_SIZE)
+                received_data += data_chunk
+                if b'END' in received_data:
+                    received_data = received_data[:len(received_data)-3]
+                    break
+                
+            CONNECTIONS = pickle.loads(received_data)
         
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()

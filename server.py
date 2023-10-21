@@ -5,40 +5,36 @@ import time
 
 HOST = '192.168.0.2'
 PORT = 19122
-BUFFER_SIZE = 20480
+BUFFER_SIZE = 204800
 
 CONNECTIONS = dict()
-BUFFER = dict()
 
 def start_server():
-    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
+    server.listen(5)
     print("Server Online!")
 
     while True:
-        message_addresss = server.recvfrom(BUFFER_SIZE+100000)
-        received_data = message_addresss[0]
-        address = message_addresss[1]
-        ip_address = address[0]
-
+        client_socket, client_address = server.accept()
+        ip_address = client_address[0]
+        print("accept connection:",ip_address)
+        
         if ip_address not in CONNECTIONS.keys():
             CONNECTIONS[ip_address] = b''
-            BUFFER[ip_address] = b''
-
-        if received_data == b'END':
-            CONNECTIONS[ip_address] = BUFFER[ip_address]
-            BUFFER[ip_address] = b''
+        
+        while True:
+            received_data = b''
+            while True:
+                data_chunk = client_socket.recv(BUFFER_SIZE)
+                received_data += data_chunk
+                if b'END' in received_data:
+                    received_data = received_data[:len(received_data)-3]
+                    break
             
             data = pickle.dumps(CONNECTIONS)
-            chunks = [data[i:i+BUFFER_SIZE] for i in range(0, len(data), BUFFER_SIZE)]
-            for chunk in chunks:
-                time.sleep(0.1)
-                server.sendto(chunk, address)
-            server.sendto(b'END', address)
-            print("sent data to:", str(address))
-        else:
-            BUFFER[ip_address] = BUFFER[ip_address] + received_data
-        
+            client_socket.sendall(data+b'END')
+            CONNECTIONS[ip_address] = received_data
+
 server_thread = threading.Thread(target=start_server)
 server_thread.start()

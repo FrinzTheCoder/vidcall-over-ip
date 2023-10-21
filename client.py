@@ -5,12 +5,13 @@ import numpy as np
 import threading
 import pickle
 
-HOST = '34.101.251.225'
-PORT = 25565
-BUFFER_SIZE = 52428800
-FRAME_WIDTH = 160
-FRAME_HEIGHT = 90
+HOST = '192.168.0.2'
+PORT = 19122
+BUFFER_SIZE = 20480
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
 CONNECTIONS = dict()
+BUFFER = b''
 
 frame_bytes = b''
 def start_camera():
@@ -40,19 +41,33 @@ while frame_bytes == b'':
 def start_receiver():
     while True:        
         global CONNECTIONS
+        global BUFFER
         user_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        user_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
         user_socket.bind(('192.168.0.2', 19123))
-        user_socket.sendto(frame_bytes, (HOST, PORT))
+        
+        chunks = [frame_bytes[i:i+BUFFER_SIZE] for i in range(0, len(frame_bytes), BUFFER_SIZE)]
+        for chunk in chunks:
+            print(len(chunk))
+            user_socket.sendto(chunk, (HOST, PORT))
+        user_socket.sendto(b'END', (HOST, PORT))
         print("sent data")
 
-        message_address = user_socket.recvfrom(BUFFER_SIZE)
-        received_data = message_address[0]
-        print("received data")
-
+        while True:
+            message_address = user_socket.recvfrom(BUFFER_SIZE)
+            received_data = message_address[0]
+            print(received_data[-1])
+        
+            if received_data == b'END' or received_data == b'':
+                CONNECTIONS = pickle.loads(BUFFER)
+                BUFFER = b''
+                print("END OF FILE")
+                break
+            else:
+                BUFFER += received_data
         user_socket.close()
-        CONNECTIONS = pickle.loads(received_data)
-        time.sleep(0.2)
-
+        # time.sleep()
+        
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()
 

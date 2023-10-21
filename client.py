@@ -7,9 +7,9 @@ import pickle
 
 HOST = '192.168.0.2'
 PORT = 19122
-BUFFER_SIZE = 1048576
-FRAME_WIDTH = 200
-FRAME_HEIGHT = 112
+BUFFER_SIZE = 10485760
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -37,38 +37,21 @@ camera_thread.start()
 while frame_bytes == b'':
     pass
 
-# def send_thread(user_socket, frame_bytes):
-#     user_socket.send(frame_bytes)
-
 def start_receiver():
-    while True:
-        try:
-            global CONNECTIONS
-            user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            user_socket.bind(('192.168.0.10',19122))
-            user_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            user_socket.connect((HOST,PORT))
+    while True:        
+        global CONNECTIONS
+        user_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        user_socket.bind(('192.168.0.2', 19123))
+        user_socket.sendto(frame_bytes, (HOST, PORT))
+        print("sent data")
 
-            # sending_thread = threading.Thread(target=send_thread,
-            #                                   args=(user_socket, frame_bytes))
-            # sending_thread.start()
-            user_socket.send(frame_bytes)
-            print("sending data")
+        message_address = user_socket.recvfrom(BUFFER_SIZE)
+        received_data = message_address[0]
+        print("received data")
 
-            received_data = b''
-            while True:
-                data_chunk = user_socket.recv(BUFFER_SIZE)
-                if not data_chunk:
-                    break
-                received_data += data_chunk
-            print("received data")
-            user_socket.close()
-            CONNECTIONS = pickle.loads(received_data)
-            time.sleep(0.3)
-        except:
-            print("TIMEOUT!")
-            time.sleep(2)
-            print("STARTING AGAIN")
+        user_socket.close()
+        CONNECTIONS = pickle.loads(received_data)
+        # time.sleep(0.2)
 
 receiver_thread = threading.Thread(target=start_receiver)
 receiver_thread.start()
@@ -76,7 +59,10 @@ receiver_thread.start()
 while True:
     for host in CONNECTIONS.keys():
         frame_data = np.frombuffer(CONNECTIONS[host], dtype=np.uint8)
-        reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
-        cv.imshow(str(host),reconstructed_frame)
-        if cv.waitKey(1) == ord('q'):
-            break
+        try:
+            reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
+            cv.imshow(str(host),reconstructed_frame)
+            if cv.waitKey(1) == ord('q'):
+                break
+        except:
+            time.sleep(1)

@@ -1,9 +1,9 @@
 import socket
 import threading
-import pickle
+import json
 import time
 
-HOST = '192.168.0.2'
+HOST = '192.168.1.4'
 PORT = 19122
 BUFFER_SIZE = 1048576
 
@@ -20,7 +20,7 @@ def handle_connect(client_socket, client_address):
         ip_address = client_address[0]
         
         if ip_address not in CONNECTIONS.keys():
-            CONNECTIONS[ip_address] = b''
+            CONNECTIONS[ip_address] = ''
         
         while True:
             received_data = b''
@@ -30,11 +30,14 @@ def handle_connect(client_socket, client_address):
                 if b'END' in received_data:
                     received_data = received_data[:len(received_data)-3]
                     break
+            json_string = json.dumps(CONNECTIONS)
+            encoded_data = json_string.encode('utf-8')
+            client_socket.sendall(encoded_data + b'END')
             
-            data = pickle.dumps(CONNECTIONS)
-            client_socket.sendall(data+b'END')
-            CONNECTIONS[ip_address] = received_data
-            time.sleep(0.1)
+            json_string = received_data.decode('utf-8')
+            decoded_data = json.loads(json_string)
+            CONNECTIONS[ip_address] = decoded_data['content']
+            # time.sleep(0.05)
 
 while True:
     client_socket, client_address = server.accept()

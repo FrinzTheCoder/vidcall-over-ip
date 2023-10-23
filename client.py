@@ -3,13 +3,14 @@ import time
 import cv2 as cv
 import numpy as np
 import threading
-import pickle
+import json
+import base64
 
-HOST = '34.101.251.225'
+HOST = '192.168.1.4'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 800
-FRAME_HEIGHT = 600
+FRAME_WIDTH = 400
+FRAME_HEIGHT = 300
 CONNECTIONS = dict()
 
 frame_bytes = b''
@@ -45,7 +46,13 @@ def start_receiver():
     user_socket.connect((HOST,PORT))
     
     while True:
-        user_socket.sendall(frame_bytes+b'END')
+        packet = {
+            "type":"image",
+            "content":base64.b64encode(frame_bytes).decode('utf-8')}
+        json_string = json.dumps(packet)
+        encoded_data = json_string.encode('utf-8')
+
+        user_socket.sendall(encoded_data + b'END')
 
         received_data = b''
         while True:
@@ -55,7 +62,8 @@ def start_receiver():
                 received_data = received_data[:len(received_data)-3]
                 break
         try:
-            CONNECTIONS = pickle.loads(received_data)
+            json_string = received_data.decode('utf-8')
+            CONNECTIONS = json.loads(json_string)
         except:
             CONNECTIONS = dict()
             print("ERROR PICKLE TRUNCATED2")
@@ -67,7 +75,8 @@ receiver_thread.start()
 while True:
     try:
         for host in CONNECTIONS.keys():
-            frame_data = np.frombuffer(CONNECTIONS[host], dtype=np.uint8)
+            frame_data = np.frombuffer(base64.b64decode(CONNECTIONS[host].encode('utf-8')), 
+                                       dtype=np.uint8)
             try:
                 reconstructed_frame = cv.imdecode(frame_data, cv.IMREAD_COLOR)
                 cv.imshow(str(host),reconstructed_frame)

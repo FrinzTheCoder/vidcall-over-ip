@@ -10,9 +10,10 @@ import base64
 HOST = '34.101.251.225'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 160
-FRAME_HEIGHT = 90
+FRAME_WIDTH = 600
+FRAME_HEIGHT = 320
 CONNECTIONS = dict()
+COMPRESSION_PARAMS = [cv.IMWRITE_JPEG_QUALITY, 10]
 
 # setting up the camera
 frame_bytes = b''
@@ -30,7 +31,7 @@ def start_camera():
             print("Error: Failed to capture frame.")
             break
         frame = cv.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
-        frame_bytes = cv.imencode('.jpg',frame)[1].tobytes()
+        frame_bytes = cv.imencode('.jpg', frame, COMPRESSION_PARAMS)[1].tobytes()
 
     cap.release()
     cv.destroyAllWindows()

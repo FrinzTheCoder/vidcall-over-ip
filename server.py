@@ -55,7 +55,7 @@ def handle_connect(client_socket, client_address):
     # P for Python
     if type == b'P': 
         handle_connect_python(client_socket, client_address)
-    # F for FLutter
+    # F for Flutter
     if type == b'F':
         handle_connect_flutter(client_socket, client_address)
     else:

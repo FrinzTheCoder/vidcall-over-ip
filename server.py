@@ -29,7 +29,6 @@ def handle_connect_python(client_socket, client_address):
 
             # receive incoming data until END flag found
             received_data = b''
-            print("listening...")
             while True:
                 data_chunk = client_socket.recv(BUFFER_SIZE)
                 received_data += data_chunk
@@ -42,7 +41,7 @@ def handle_connect_python(client_socket, client_address):
             encoded_data = json_string.encode('utf-8')
             client_socket.sendall(encoded_data + b'END')
             
-            # update the client image on the server side
+            # update the client images on the server side
             json_string = received_data.decode('utf-8')
             decoded_data = json.loads(json_string)
             CONNECTIONS[ip_address] = decoded_data['content']
@@ -52,7 +51,14 @@ def handle_connect_python(client_socket, client_address):
 
 # handling for incoming connection from flutter client
 def handle_connect_flutter(client_socket, client_addres):
-    pass
+    while True:
+        # send the entire images data to client
+        json_string = json.dumps(CONNECTIONS)
+        encoded_data = json_string.encode('utf-8')
+        client_socket.sendall(encoded_data)
+
+        # add some delay
+        time.sleep(0.05)
 
 # decide whether the connection coming from python or flutter client
 def handle_connect(client_socket, client_address):

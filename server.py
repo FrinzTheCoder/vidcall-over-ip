@@ -4,7 +4,7 @@ import json
 import time
 
 # DONT FORGET TO SET HOST AND PORT TO THE RIGHT VALUE
-HOST = '192.168.1.4'
+HOST = '127.0.0.1'
 PORT = 19122
 BUFFER_SIZE = 1048576
 CONNECTIONS = dict()
@@ -21,27 +21,33 @@ def handle_connect_python(client_socket, client_address):
     while True:
         ip_address = client_address[0]
         
+        # adding new host in connection in first connection
         if ip_address not in CONNECTIONS.keys():
             CONNECTIONS[ip_address] = ''
         
         while True:
+
+            # receive incoming data until END flag found
             received_data = b''
             print("listening...")
             while True:
                 data_chunk = client_socket.recv(BUFFER_SIZE)
                 received_data += data_chunk
-                print(received_data)
                 if b'END' in received_data:
                     received_data = received_data[:len(received_data)-3]
                     break
+
+            # send the entire images data to client
             json_string = json.dumps(CONNECTIONS)
             encoded_data = json_string.encode('utf-8')
             client_socket.sendall(encoded_data + b'END')
             
-            if b'FLUTTER' not in received_data:
-                json_string = received_data.decode('utf-8')
-                decoded_data = json.loads(json_string)
-                CONNECTIONS[ip_address] = decoded_data['content']
+            # update the client image on the server side
+            json_string = received_data.decode('utf-8')
+            decoded_data = json.loads(json_string)
+            CONNECTIONS[ip_address] = decoded_data['content']
+
+            # add some delay
             time.sleep(0.05)
 
 # handling for incoming connection from flutter client

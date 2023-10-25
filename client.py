@@ -6,8 +6,8 @@ import threading
 import json
 import base64
 
-HOST = '192.168.1.4'
-PORT = 19122
+HOST = '127.0.0.1'
+PORT = 19123
 BUFFER_SIZE = 1048576
 FRAME_WIDTH = 400
 FRAME_HEIGHT = 300

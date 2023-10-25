@@ -7,11 +7,11 @@ import json
 import base64
 
 # DONT FORGET TO SET HOST AND PORT TO THE RIGHT VALUE
-HOST = '127.0.0.1'
+HOST = '34.101.251.225'
 PORT = 19122
 BUFFER_SIZE = 1048576
-FRAME_WIDTH = 400
-FRAME_HEIGHT = 300
+FRAME_WIDTH = 160
+FRAME_HEIGHT = 90
 CONNECTIONS = dict()
 
 # setting up the camera
@@ -85,7 +85,7 @@ def start_receiver():
         except:
             CONNECTIONS = dict()
             print("ERROR PICKLE TRUNCATED2")
-        time.sleep(0.1)
+        time.sleep(0.05)
         
 # start receiver thread
 receiver_thread = threading.Thread(target=start_receiver)

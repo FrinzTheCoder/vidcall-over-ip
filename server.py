@@ -4,7 +4,7 @@ import json
 import time
 
 # DONT FORGET TO SET HOST AND PORT TO THE RIGHT VALUE
-HOST = '127.0.0.1'
+HOST = '10.184.0.2'
 PORT = 19122
 BUFFER_SIZE = 1048576
 CONNECTIONS = dict()
@@ -41,10 +41,13 @@ def handle_connect_python(client_socket, client_address):
             encoded_data = json_string.encode('utf-8')
             client_socket.sendall(encoded_data + b'END')
             
-            # update the client images on the server side
-            json_string = received_data.decode('utf-8')
-            decoded_data = json.loads(json_string)
-            CONNECTIONS[ip_address] = decoded_data['content']
+            try:
+                # update the client images on the server side
+                json_string = received_data.decode('utf-8')
+                decoded_data = json.loads(json_string)
+                CONNECTIONS[ip_address] = decoded_data['content']
+            except:
+                print("Error: Failure on updating client data")
 
             # add some delay
             time.sleep(0.05)

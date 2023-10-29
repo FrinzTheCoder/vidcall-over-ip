@@ -4,10 +4,13 @@ import json
 import time
 
 # DONT FORGET TO SET HOST AND PORT TO THE RIGHT VALUE
-HOST = '10.184.0.2'
+HOST = '192.168.0.2'
 PORT = 19122
 BUFFER_SIZE = 1048576
 CONNECTIONS = dict()
+
+# INPUT THE SECURITY PIN (6 digits)
+# PIN = input("INPUT THE SECURITY PIN(6 digits):")
 
 # SETUP THE TCP SERVER SOCKET
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -56,9 +59,10 @@ def handle_connect_python(client_socket, client_address):
 def handle_connect_flutter(client_socket, client_addres):
     while True:
         # send the entire images data to client
-        json_string = json.dumps(CONNECTIONS)
-        encoded_data = json_string.encode('utf-8')
-        client_socket.sendall(encoded_data)
+        images_stream = ""
+        for address in CONNECTIONS.keys():
+            images_stream += f'{CONNECTIONS[address]}-'
+        client_socket.sendall(images_stream.encode('utf-8'))
 
         # add some delay
         time.sleep(0.05)

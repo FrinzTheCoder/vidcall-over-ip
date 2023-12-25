@@ -108,10 +108,15 @@ class UserInterface(tk.Tk):
             self.label_for_image.after(50, self.get_video)
 
     def set_video_target(self, address):
-        if self.current_target_display != address:
+        if self.current_target_display == '':
             self.current_target_display = address
-            time.sleep(0.2)
-            self.get_video()
+            self.receive_video_threading = threading.Thread(target=self.get_video)
+            self.receive_video_threading.start()
+        elif self.current_target_display != address:
+            self.current_target_display = address
+            self.receive_video_threading.join()
+            self.receive_video_threading = threading.Thread(target=self.get_video)
+            self.receive_video_threading.start()
 
     def toggle_video(self):
         self.button_toggle_camera.config(state=tk.DISABLED)

@@ -113,8 +113,10 @@ class UserInterface(tk.Tk):
             self.receive_video_threading = threading.Thread(target=self.get_video)
             self.receive_video_threading.start()
         elif self.current_target_display != address:
-            self.current_target_display = address
+            temp = address
+            self.current_target_display = ''
             self.receive_video_threading.join()
+            self.current_target_display = temp
             self.receive_video_threading = threading.Thread(target=self.get_video)
             self.receive_video_threading.start()
 

@@ -56,6 +56,9 @@ class UserInterface(tk.Tk):
         # toggle self camera button
         self.button_toggle_camera = tk.Button(self.frame_control_panel, width=15, height=5, background='green', text="Toggle Camera", command=self.toggle_video)
         self.button_toggle_camera.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, anchor=tk.W)
+
+        new_thread = threading.Thread(target=self.get_video)
+        new_thread.start()
         
     def ip_address_info(self):
 
@@ -77,9 +80,13 @@ class UserInterface(tk.Tk):
             button.pack(side=tk.TOP, expand=True, fill=tk.X, anchor=tk.N)
             self.list_of_address.append(button)
 
-    def get_video(self, address):
+    def get_video(self):
+
+        if self.current_target_display == "":
+            self.label_for_image.after(50, self.get_video)
+
         # declaring the target
-        self.receiver_socket.send(address.encode('utf-8'))
+        self.receiver_socket.send(self.current_target_display.encode('utf-8'))
         self.receiver_socket.recv(3)
         
         # receiving the payload length
@@ -103,23 +110,12 @@ class UserInterface(tk.Tk):
 
         self.label_for_image.imgtk = imgtk
         self.label_for_image.config(image=imgtk)
+        time.sleep(0.05)
 
-        if self.end_flag != False:
-            self.label_for_image.after(50, self.get_video)
+        self.label_for_image.after(50, self.get_video)
 
     def set_video_target(self, address):
-        if self.current_target_display == '':
-            self.current_target_display = address
-            self.receive_video_threading = threading.Thread(target=self.get_video, args=(address,))
-            self.receive_video_threading.start()
-        elif self.current_target_display != address:
-            self.current_target_display = address
-            self.end_flag = True
-            self.receive_video_threading.join()
-            self.current_target_display = address
-            self.end_flag = False
-            self.receive_video_threading = threading.Thread(target=self.get_video)
-            self.receive_video_threading.start()
+        self.current_target_display = address
 
     def toggle_video(self):
         self.button_toggle_camera.config(state=tk.DISABLED)
@@ -130,12 +126,6 @@ class UserInterface(tk.Tk):
             self.camera_thread = threading.Thread(target=self.open_cam_request)
             self.camera_thread.start()
 
-            # try:
-                
-            # except:
-            #     self.camera_state = False
-            #     print("TEST2")
-            #     # todo: message error
         else:
             self.camera_state = False
             self.button_toggle_camera.config(state=tk.ACTIVE)

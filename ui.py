@@ -56,9 +56,9 @@ class UserInterface(tk.Tk):
         # toggle self camera button
         self.button_toggle_camera = tk.Button(self.frame_control_panel, width=15, height=5, background='green', text="Toggle Camera", command=self.toggle_video)
         self.button_toggle_camera.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, anchor=tk.W)
-
-        new_thread = threading.Thread(target=self.get_video)
-        new_thread.start()
+        
+        self.horseman_thread = threading.Thread(target=self.horseman)
+        self.horseman_thread.start()
         
     def ip_address_info(self):
 
@@ -81,9 +81,6 @@ class UserInterface(tk.Tk):
             self.list_of_address.append(button)
 
     def get_video(self):
-
-        if self.current_target_display == "":
-            self.label_for_image.after(50, self.get_video)
 
         # declaring the target
         self.receiver_socket.send(self.current_target_display.encode('utf-8'))
@@ -113,6 +110,11 @@ class UserInterface(tk.Tk):
         time.sleep(0.05)
 
         self.label_for_image.after(50, self.get_video)
+
+    def horseman(self):
+        while self.current_target_display == "":
+            pass
+        self.get_video()
 
     def set_video_target(self, address):
         self.current_target_display = address
